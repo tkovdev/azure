@@ -3,12 +3,6 @@ terraform {
     azurerm = {
       source = "hashicorp/azurerm"
     }
-    local = {
-      source = "hashicorp/local"
-    }
-    null = {
-      source = "hashicorp/null"
-    }
   }
 }
 

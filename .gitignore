@@ -22,3 +22,5 @@ terraform.rc
 
 .env
 .env.*
+ansible/inventory/terraform_hosts.ini
+ansible/group_vars/caddy.generated.yml

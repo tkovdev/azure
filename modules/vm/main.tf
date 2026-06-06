@@ -43,11 +43,11 @@ resource "azurerm_network_security_group" "vm_nsg" {
 
 # either use the externally provided nic or use the one created in this tf
 locals {
-  effective_nic_id = var.external_nic_id != null ? var.external_nic_id : azurerm_network_interface.vm_nic[0].id
+  effective_nic_id = var.use_alternative_nic ? one(azurerm_network_interface.vm_nic[*].id) : var.external_nic_id
 }
 
 resource "azurerm_network_interface" "vm_nic" {
-  #do not create this nic if an external one is provided
+  # Create an internal NIC only when explicitly using the module-managed path.
   count = var.use_alternative_nic ? 1 : 0
   name                = "nic-${var.name}"
   location            = var.location

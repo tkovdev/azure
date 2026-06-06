@@ -1,0 +1,60 @@
+- name: Configure caddy reverse proxy
+  hosts: caddy
+  become: true
+
+  vars_files:
+    - ../group_vars/caddy.yml
+    - ../group_vars/caddy.generated.yml
+
+  vars:
+    caddy_config_path: /etc/caddy/Caddyfile
+
+  handlers:
+    - name: restart caddy
+      service:
+        name: caddy
+        state: restarted
+        enabled: true
+
+  tasks:
+    - name: Install prerequisites
+      apt:
+        update_cache: true
+        name:
+          - debian-keyring
+          - debian-archive-keyring
+          - apt-transport-https
+          - curl
+        state: present
+
+    - name: Add Caddy apt key
+      shell: |
+        curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+
+    - name: Add Caddy apt repo
+      copy:
+        dest: /etc/apt/sources.list.d/caddy-stable.list
+        content: |
+          deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main
+        mode: "0644"
+
+    - name: Install caddy
+      apt:
+        update_cache: true
+        name: caddy
+        state: present
+
+    - name: Render Caddyfile
+      template:
+        src: ../templates/Caddyfile.j2
+        dest: "{{ caddy_config_path }}"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: restart caddy
+
+    - name: Validate Caddy config
+      command: caddy validate --config {{ caddy_config_path }}
+      changed_when: false

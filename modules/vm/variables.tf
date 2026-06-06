@@ -32,7 +32,17 @@ variable "tags" {
 
 variable "use_alternative_nic" {
   type = bool
-  default = false
+  default = true
+
+  validation {
+    condition     = var.use_alternative_nic || var.external_nic_id != null
+    error_message = "When use_alternative_nic is false, external_nic_id must be provided."
+  }
+
+  validation {
+    condition     = !var.use_alternative_nic || var.subnet != null
+    error_message = "When use_alternative_nic is true, subnet must be provided to create the internal NIC."
+  }
 }
 
 variable "external_nic_id" {
